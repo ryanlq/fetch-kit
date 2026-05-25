@@ -498,7 +498,7 @@ if [[ $# -eq 0 ]] && [[ ! -t 0 ]]; then
     echo ""
     info "Installing fetch-kit to ${INSTALL_DIR}..."
     mkdir -p "$INSTALL_DIR"
-    cat <&0 > "${INSTALL_DIR}/fetch-kit"
+    curl -sL "$SCRIPT_URL" -o "${INSTALL_DIR}/fetch-kit"
     chmod +x "${INSTALL_DIR}/fetch-kit"
     ok "fetch-kit v${VERSION} installed"
     echo ""
