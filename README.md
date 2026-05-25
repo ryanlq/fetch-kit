@@ -9,7 +9,7 @@ Unified installer for ryanlq CLI tools. One command to install, update, check ve
 | [ai-experience-learner](https://github.com/ryanlq/ai-experience-learner) | `xp` | Python | Distill past interactions into reusable lessons, recall to improve inference |
 | [akshare-cli](https://github.com/ryanlq/akshare-cli) | `ak` | Python | 1092+ Chinese financial data functions via CLI |
 | [get-news](https://github.com/ryanlq/get-news) | `get-news` | Python | Multi-step web scraper with rule-driven extraction |
-| [mail-send](https://github.com/ryanlq/mail-send) | `mail-send` | Go | Minimal SMTP email sender for AI agents |
+| [olkcli](https://github.com/rlrghb/olkcli) | `olk` | Go | Microsoft Outlook CLI via Graph API (mail, calendar, contacts, todo, OneDrive) |
 
 ## Quick Start
 
@@ -26,7 +26,7 @@ This installs `fetch-kit` to `~/.local/bin/` and all managed tools. After that, 
 fetch-kit install              # Install all tools
 fetch-kit install xp ak        # Install specific tools
 fetch-kit update               # Update all tools to latest
-fetch-kit update mail-send     # Update a specific tool
+fetch-kit update olk           # Update a specific tool
 fetch-kit upgrade              # Update fetch-kit itself
 fetch-kit status               # Show installed vs latest versions
 fetch-kit uninstall            # Uninstall all tools
@@ -65,7 +65,7 @@ Skills are downloaded from each repo's `skill/` folder and placed in:
 ## How It Works
 
 - **Python tools** — installed via `uv tool install` (auto-installs uv if missing)
-- **Go tools** — downloads the correct platform binary to `~/.local/bin/`
+- **Go tools** — downloads the platform binary (tar.gz or bare) to `~/.local/bin/`
 - **Version check** — tries `--version` first, falls back to `uv tool list`
 - **GitHub API** — prefers authenticated `gh` CLI (5000 req/hr), falls back to anonymous curl
 

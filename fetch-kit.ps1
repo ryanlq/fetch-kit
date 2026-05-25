@@ -14,7 +14,7 @@ for ai-experience-learner, akshare-cli, get-news, and mail-send.
 #>
 
 $ErrorActionPreference = "Stop"
-$VERSION = "0.3.0"
+$VERSION = "0.4.0"
 $ScriptUrl = "https://raw.githubusercontent.com/$script:Owner/fetch-kit/main/fetch-kit.ps1"
 $InstallDir = Join-Path $env:USERPROFILE ".local\bin"
 
@@ -29,7 +29,7 @@ $script:ToolRegistry = @(
     "xp|ai-experience-learner|python|ai-experience-learner|master|experience-learner|no"
     "ak|akshare-cli|python|akcli|main|akshare-cli|yes"
     "get-news|get-news|python|get-news|main|get-news|yes"
-    "mail-send|mail-send|go|mail-send|main|mail-send|no"
+    "olk|olkcli|go|olk|main|olk|no"
 )
 
 # ──────────────────────────────────────────────
@@ -167,21 +167,44 @@ function Install-Tool {
             $platform = Get-Platform
             $installDir = Join-Path $env:USERPROFILE ".local\bin"
             New-Item -ItemType Directory -Force -Path $installDir | Out-Null
-
-            # Windows uses .exe suffix
-            $binaryName = if ($platform -match "windows") { "$Tool-$platform.exe" } else { "$Tool-$platform" }
-            $url = "https://github.com/$script:Owner/$repo/releases/download/$tag/$binaryName"
-            $dest = Join-Path $installDir "$Tool.exe"
+            $verClean = $tag.TrimStart('v')
 
             Write-Info "Downloading $Tool ($tag) for $platform..."
-            try {
-                Invoke-WebRequest -Uri $url -OutFile $dest -ErrorAction Stop
-            } catch {
-                # Fallback: try without .exe in asset name (some releases use just os-arch)
-                $binaryName2 = "$Tool-$platform"
-                $url2 = "https://github.com/$script:Owner/$repo/releases/download/$tag/$binaryName2"
+            $downloaded = $false
+
+            # Try goreleaser zip first (Windows) or tar.gz (Linux/macOS)
+            if ($platform -match "windows") {
+                $archiveUrl = "https://github.com/$script:Owner/$repo/releases/download/$tag/${Tool}_${verClean}_${platform}.zip"
+                $tmpFile = Join-Path $env:TEMP "${Tool}_${verClean}.zip"
                 try {
-                    Invoke-WebRequest -Uri $url2 -OutFile $dest -ErrorAction Stop
+                    Invoke-WebRequest -Uri $archiveUrl -OutFile $tmpFile -ErrorAction Stop
+                    Expand-Archive -Path $tmpFile -DestinationPath $installDir -Force
+                    Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+                    $downloaded = $true
+                } catch {
+                    Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+                }
+            } else {
+                $archiveUrl = "https://github.com/$script:Owner/$repo/releases/download/$tag/${Tool}_${verClean}_${platform}.tar.gz"
+                $tmpFile = Join-Path $env:TEMP "${Tool}_${verClean}.tar.gz"
+                try {
+                    Invoke-WebRequest -Uri $archiveUrl -OutFile $tmpFile -ErrorAction Stop
+                    tar xzf $tmpFile -C $installDir $Tool 2>$null
+                    Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+                    $downloaded = $true
+                } catch {
+                    Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+                }
+            }
+
+            # Fallback: bare binary
+            if (-not $downloaded) {
+                $binaryName = if ($platform -match "windows") { "$Tool-$platform.exe" } else { "$Tool-$platform" }
+                $bareUrl = "https://github.com/$script:Owner/$repo/releases/download/$tag/$binaryName"
+                $dest = if ($platform -match "windows") { Join-Path $installDir "$Tool.exe" } else { Join-Path $installDir $Tool }
+                try {
+                    Invoke-WebRequest -Uri $bareUrl -OutFile $dest -ErrorAction Stop
+                    $downloaded = $true
                 } catch {
                     Write-Err "Failed to download $Tool"
                     return
@@ -311,14 +334,18 @@ function Install-SkillForTool {
     New-Item -ItemType Directory -Force -Path $skillDir | Out-Null
 
     $baseUrl = "https://raw.githubusercontent.com/$script:Owner/$repo/$branch/skill/$skill"
+    $rootUrl = "https://raw.githubusercontent.com/$script:Owner/$repo/$branch"
 
-    # Download SKILL.md
+    # Download SKILL.md — try skill/ subdirectory first, fall back to root
     $skillUrl = "$baseUrl/SKILL.md"
     $skillFile = Join-Path $skillDir "SKILL.md"
     try {
         Invoke-WebRequest -Uri $skillUrl -OutFile $skillFile -ErrorAction Stop
     } catch {
-        Write-Err "Failed to download SKILL.md for $skill"
+        try {
+            Invoke-WebRequest -Uri "$rootUrl/SKILL.md" -OutFile $skillFile -ErrorAction Stop
+        } catch {
+            Write-Err "Failed to download SKILL.md for $skill"
         Remove-Item $skillDir -Recurse -Force -ErrorAction SilentlyContinue
         return
     }
@@ -452,7 +479,7 @@ if (-not $Command -or $Command -in @("-h", "--help", "help")) {
     Write-Host "  xp          ai-experience-learner (Python)"
     Write-Host "  ak          akshare-cli (Python)"
     Write-Host "  get-news    get-news (Python)"
-    Write-Host "  mail-send   mail-send (Go)"
+    Write-Host "  olk         olkcli (Go) — Microsoft Outlook CLI"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host "  .\fetch-kit.ps1 install"

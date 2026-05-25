@@ -5,7 +5,7 @@ set -euo pipefail
 # fetch-kit — Unified installer for ryanlq CLI tools
 # ──────────────────────────────────────────────
 
-VERSION="0.3.0"
+VERSION="0.4.0"
 OWNER="ryanlq"
 SCRIPT_URL="https://raw.githubusercontent.com/${OWNER}/fetch-kit/main/fetch-kit.sh"
 INSTALL_DIR="${HOME}/.local/bin"
@@ -43,7 +43,7 @@ TOOL_REGISTRY=(
     "xp|ai-experience-learner|python|ai-experience-learner|master|experience-learner|no"
     "ak|akshare-cli|python|akcli|main|akshare-cli|yes"
     "get-news|get-news|python|get-news|main|get-news|yes"
-    "mail-send|mail-send|go|mail-send|main|mail-send|no"
+    "olk|olkcli|go|olk|main|olk|no"
 )
 
 # ──────────────────────────────────────────────
@@ -183,13 +183,23 @@ install_tool() {
             mkdir -p "$install_dir"
             info "Downloading ${tool} (${tag}) for ${platform}..."
             local tmpfile; tmpfile=$(mktemp)
-            if ! curl -sL "https://github.com/${OWNER}/${repo}/releases/download/${tag}/${tool}-${platform}" -o "$tmpfile"; then
+            local ver_clean="${tag#v}"
+            # Try goreleaser tar.gz first, fall back to bare binary
+            local archive_url="https://github.com/${OWNER}/${repo}/releases/download/${tag}/${tool}_${ver_clean}_${platform}.tar.gz"
+            local bare_url="https://github.com/${OWNER}/${repo}/releases/download/${tag}/${tool}-${platform}"
+            if curl -sLf "$archive_url" -o "$tmpfile" 2>/dev/null; then
+                tar xzf "$tmpfile" -C "$install_dir" "$tool" 2>/dev/null \
+                    || tar xzf "$tmpfile" -C "$install_dir" 2>/dev/null
+                rm -f "$tmpfile"
+                chmod +x "${install_dir}/${tool}"
+            elif curl -sLf "$bare_url" -o "$tmpfile" 2>/dev/null; then
+                chmod +x "$tmpfile"
+                mv "$tmpfile" "${install_dir}/${tool}"
+            else
                 rm -f "$tmpfile"
                 err "Failed to download ${tool}"
                 return 1
             fi
-            chmod +x "$tmpfile"
-            mv "$tmpfile" "${install_dir}/${tool}"
             ;;
     esac
 
@@ -291,8 +301,13 @@ install_skill_for_tool() {
     mkdir -p "$skill_dir"
 
     local base_url="https://raw.githubusercontent.com/${OWNER}/${repo}/${branch}/skill/${skill}"
+    local root_url="https://raw.githubusercontent.com/${OWNER}/${repo}/${branch}"
 
+    # Try skill/ subdirectory first, fall back to root SKILL.md
     curl -sL "${base_url}/SKILL.md" -o "${skill_dir}/SKILL.md"
+    if [[ ! -s "${skill_dir}/SKILL.md" ]]; then
+        curl -sL "${root_url}/SKILL.md" -o "${skill_dir}/SKILL.md"
+    fi
     if [[ ! -s "${skill_dir}/SKILL.md" ]]; then
         err "Failed to download SKILL.md for ${skill}"
         rm -rf "$skill_dir"
@@ -382,7 +397,7 @@ ${BOLD}Tools:${NC}
   xp          ai-experience-learner (Python) — distill & recall experience
   ak          akshare-cli (Python) — Chinese financial data CLI
   get-news    get-news (Python) — multi-step web scraper
-  mail-send   mail-send (Go) — SMTP email sender for AI agents
+  olk         olkcli (Go) — Microsoft Outlook CLI via Graph API
 
 ${BOLD}Adding a new tool:${NC}
   Append one line to TOOL_REGISTRY in this script:
