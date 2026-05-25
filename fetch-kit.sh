@@ -5,7 +5,10 @@ set -euo pipefail
 # fetch-kit — Unified installer for ryanlq CLI tools
 # ──────────────────────────────────────────────
 
-VERSION="0.2.0"
+VERSION="0.3.0"
+OWNER="ryanlq"
+SCRIPT_URL="https://raw.githubusercontent.com/${OWNER}/fetch-kit/main/fetch-kit.sh"
+INSTALL_DIR="${HOME}/.local/bin"
 
 # Colors
 RED='\033[0;31m'
@@ -35,7 +38,6 @@ bold()  { printf "${BOLD}%s${NC}\n" "$*"; }
 #
 # To add a new tool: just append one line below.
 # ──────────────────────────────────────────────
-OWNER="ryanlq"
 
 TOOL_REGISTRY=(
     "xp|ai-experience-learner|python|ai-experience-learner|master|experience-learner|no"
@@ -370,11 +372,11 @@ ${BOLD}Usage:${NC}
 ${BOLD}Commands:${NC}
   install [TOOL...]     Install one or more tools (default: all)
   update  [TOOL...]     Update one or more tools (default: all)
+  upgrade              Update fetch-kit itself to the latest version
   status                Show installed versions vs latest
   skills  [TOOL...] -t TARGET
                         Install skills to target (claude|codex)
   uninstall [TOOL...]   Uninstall one or more tools
-  self-update           Update fetch-kit itself
 
 ${BOLD}Tools:${NC}
   xp          ai-experience-learner (Python) — distill & recall experience
@@ -469,13 +471,44 @@ cmd_skills() {
 }
 
 cmd_self_update() {
-    info "Self-update not yet available. Re-run the install command:"
-    echo "  curl -sL <url>/fetch-kit.sh | bash"
+    info "Updating fetch-kit..."
+    local tmpfile; tmpfile=$(mktemp)
+    if ! curl -sL "$SCRIPT_URL" -o "$tmpfile"; then
+        rm -f "$tmpfile"
+        err "Failed to download latest fetch-kit"
+        return 1
+    fi
+    chmod +x "$tmpfile"
+    mkdir -p "$INSTALL_DIR"
+    mv "$tmpfile" "${INSTALL_DIR}/fetch-kit"
+    local new_ver; new_ver=$("${INSTALL_DIR}/fetch-kit" --version 2>/dev/null || echo "unknown")
+    ok "fetch-kit updated to ${new_ver}"
+}
+
+cmd_upgrade() {
+    cmd_self_update
 }
 
 # ──────────────────────────────────────────────
 # Entry point
 # ──────────────────────────────────────────────
+# When piped via curl (no args, stdin is a pipe), self-install then install all tools.
+if [[ $# -eq 0 ]] && [[ ! -t 0 ]]; then
+    bold "Welcome to fetch-kit!"
+    echo ""
+    info "Installing fetch-kit to ${INSTALL_DIR}..."
+    mkdir -p "$INSTALL_DIR"
+    cat <&0 > "${INSTALL_DIR}/fetch-kit"
+    chmod +x "${INSTALL_DIR}/fetch-kit"
+    ok "fetch-kit v${VERSION} installed"
+    echo ""
+    export PATH="${INSTALL_DIR}:${PATH}"
+    cmd_install
+    echo ""
+    bold "Done! Run 'fetch-kit status' to verify."
+    exit 0
+fi
+
 if [[ $# -eq 0 ]]; then
     usage
     exit 0
@@ -487,10 +520,10 @@ shift
 case "$command" in
     install)     cmd_install "$@" ;;
     update)      cmd_update "$@" ;;
+    upgrade)     cmd_upgrade ;;
     uninstall)   cmd_uninstall "$@" ;;
     status)      show_status ;;
     skills)      cmd_skills "$@" ;;
-    self-update) cmd_self_update ;;
     -h|--help|help) usage ;;
     -v|--version) echo "fetch-kit v${VERSION}" ;;
     *)           err "Unknown command: ${command}"; usage; exit 1 ;;

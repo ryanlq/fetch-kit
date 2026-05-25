@@ -14,7 +14,9 @@ for ai-experience-learner, akshare-cli, get-news, and mail-send.
 #>
 
 $ErrorActionPreference = "Stop"
-$VERSION = "0.2.0"
+$VERSION = "0.3.0"
+$ScriptUrl = "https://raw.githubusercontent.com/$script:Owner/fetch-kit/main/fetch-kit.ps1"
+$InstallDir = Join-Path $env:USERPROFILE ".local\bin"
 
 # ──────────────────────────────────────────────
 # Tool registry
@@ -418,7 +420,7 @@ $ToolArgs = @()
 $i = 0
 while ($i -lt $args.Count) {
     switch ($args[$i]) {
-        { $_ -in @("install", "update", "uninstall", "status", "skills", "self-update", "-h", "--help", "help", "-v", "--version") } {
+        { $_ -in @("install", "update", "upgrade", "uninstall", "status", "skills", "self-update", "-h", "--help", "help", "-v", "--version") } {
             $Command = $_
         }
         { $_ -in @("-t", "--target") } {
@@ -441,6 +443,7 @@ if (-not $Command -or $Command -in @("-h", "--help", "help")) {
     Write-Host "Commands:"
     Write-Host "  install [TOOL...]       Install one or more tools (default: all)"
     Write-Host "  update  [TOOL...]       Update one or more tools (default: all)"
+    Write-Host "  upgrade                 Update fetch-kit itself"
     Write-Host "  status                  Show installed versions vs latest"
     Write-Host "  skills [TOOL...] -t T   Install skills to target (claude|codex)"
     Write-Host "  uninstall [TOOL...]     Uninstall one or more tools"
@@ -495,6 +498,29 @@ switch ($Command) {
         }
     }
     "self-update" {
-        Write-Info "Self-update not yet available."
+        Write-Info "Updating fetch-kit..."
+        $tmpFile = Join-Path $env:TEMP "fetch-kit-$VERSION.ps1"
+        try {
+            Invoke-WebRequest -Uri $ScriptUrl -OutFile $tmpFile -ErrorAction Stop
+            New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+            Copy-Item $tmpFile -Destination (Join-Path $InstallDir "fetch-kit.ps1") -Force
+            Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+            Write-Ok "fetch-kit updated"
+        } catch {
+            Write-Err "Failed to update fetch-kit"
+        }
+    }
+    "upgrade" {
+        Write-Info "Updating fetch-kit..."
+        $tmpFile = Join-Path $env:TEMP "fetch-kit-$VERSION.ps1"
+        try {
+            Invoke-WebRequest -Uri $ScriptUrl -OutFile $tmpFile -ErrorAction Stop
+            New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+            Copy-Item $tmpFile -Destination (Join-Path $InstallDir "fetch-kit.ps1") -Force
+            Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+            Write-Ok "fetch-kit updated"
+        } catch {
+            Write-Err "Failed to update fetch-kit"
+        }
     }
 }

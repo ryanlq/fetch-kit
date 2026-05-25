@@ -14,14 +14,11 @@ Unified installer for ryanlq CLI tools. One command to install, update, check ve
 ## Quick Start
 
 ```bash
-# One command to install everything
+# One command to install fetch-kit and all tools
 curl -sL https://raw.githubusercontent.com/ryanlq/fetch-kit/main/fetch-kit.sh | bash
-
-# Or clone and run
-git clone https://github.com/ryanlq/fetch-kit.git
-cd fetch-kit
-./fetch-kit.sh install
 ```
+
+This installs `fetch-kit` to `~/.local/bin/` and all managed tools. After that, use `fetch-kit` as a regular command.
 
 ## Usage
 
@@ -30,6 +27,7 @@ fetch-kit install              # Install all tools
 fetch-kit install xp ak        # Install specific tools
 fetch-kit update               # Update all tools to latest
 fetch-kit update mail-send     # Update a specific tool
+fetch-kit upgrade              # Update fetch-kit itself
 fetch-kit status               # Show installed vs latest versions
 fetch-kit uninstall            # Uninstall all tools
 ```
