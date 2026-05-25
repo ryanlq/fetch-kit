@@ -77,7 +77,7 @@ function Get-Platform {
     # Detect if running under WSL or native
     if ($IsLinux) { $os = "linux" }
     elseif ($IsMacOS) { $os = "darwin" }
-    return "${os}-${arch}"
+    return "${os}_${arch}"
 }
 
 # ──────────────────────────────────────────────

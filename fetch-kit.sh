@@ -185,7 +185,8 @@ install_tool() {
             local tmpfile; tmpfile=$(mktemp)
             local ver_clean="${tag#v}"
             # Try goreleaser tar.gz first, fall back to bare binary
-            local archive_url="https://github.com/${OWNER}/${repo}/releases/download/${tag}/${tool}_${ver_clean}_${platform}.tar.gz"
+            local platform_underscore="${platform//-/_}"
+            local archive_url="https://github.com/${OWNER}/${repo}/releases/download/${tag}/${tool}_${ver_clean}_${platform_underscore}.tar.gz"
             local bare_url="https://github.com/${OWNER}/${repo}/releases/download/${tag}/${tool}-${platform}"
             if curl -sLf "$archive_url" -o "$tmpfile" 2>/dev/null; then
                 tar xzf "$tmpfile" -C "$install_dir" "$tool" 2>/dev/null \
