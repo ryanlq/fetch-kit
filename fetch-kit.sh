@@ -44,6 +44,7 @@ TOOL_REGISTRY=(
     "ak|akshare-cli|python|akcli|main|akshare-cli|yes"
     "get-news|get-news|python|get-news|main|get-news|yes"
     "olk|olkcli|go|olk|main|olk|no"
+    "sequoia|Sequoia-X|python|sequoia_x|master|sequoia-x|no"
 )
 
 # ──────────────────────────────────────────────
@@ -399,6 +400,7 @@ ${BOLD}Tools:${NC}
   ak          akshare-cli (Python) — Chinese financial data CLI
   get-news    get-news (Python) — multi-step web scraper
   olk         olkcli (Go) — Microsoft Outlook CLI via Graph API
+  sequoia     Sequoia-X (Python) — A股量化选股系统
 
 ${BOLD}Adding a new tool:${NC}
   Append one line to TOOL_REGISTRY in this script:

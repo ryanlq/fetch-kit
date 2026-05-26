@@ -10,6 +10,7 @@ Unified installer for ryanlq CLI tools. One command to install, update, check ve
 | [akshare-cli](https://github.com/ryanlq/akshare-cli) | `ak` | Python | 1092+ Chinese financial data functions via CLI |
 | [get-news](https://github.com/ryanlq/get-news) | `get-news` | Python | Multi-step web scraper with rule-driven extraction |
 | [olkcli](https://github.com/rlrghb/olkcli) | `olk` | Go | Microsoft Outlook CLI via Graph API (mail, calendar, contacts, todo, OneDrive) |
+| [Sequoia-X](https://github.com/ryanlq/Sequoia-X) | `sequoia` | Python | A股量化选股系统，AI Agent 友好 |
 
 ## Quick Start
 

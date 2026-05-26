@@ -30,6 +30,7 @@ $script:ToolRegistry = @(
     "ak|akshare-cli|python|akcli|main|akshare-cli|yes"
     "get-news|get-news|python|get-news|main|get-news|yes"
     "olk|olkcli|go|olk|main|olk|no"
+    "sequoia|Sequoia-X|python|sequoia_x|master|sequoia-x|no"
 )
 
 # ──────────────────────────────────────────────
@@ -480,6 +481,7 @@ if (-not $Command -or $Command -in @("-h", "--help", "help")) {
     Write-Host "  ak          akshare-cli (Python)"
     Write-Host "  get-news    get-news (Python)"
     Write-Host "  olk         olkcli (Go) — Microsoft Outlook CLI"
+    Write-Host "  sequoia     Sequoia-X (Python) — A股量化选股系统"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host "  .\fetch-kit.ps1 install"
